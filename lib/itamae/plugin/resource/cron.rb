@@ -15,6 +15,8 @@ module Itamae
         define_attribute :cron_user, type: String, default: 'root'
         define_attribute :cron_name, type: String, default_name: true
         define_attribute :command, type: String
+        define_attribute :owner, type: String, default: 'root'
+        define_attribute :group, type: String, default: 'root'
 
         def pre_action
           case @current_action
@@ -37,6 +39,8 @@ module Itamae
             current.weekday = fields[:weekday]
             current.cron_user = fields[:cron_user]
             current.command = fields[:command]
+            # current.owner = fields[:owner]
+            # current.group = fields[:group]
           else
             current.exist = false
           end
@@ -50,6 +54,7 @@ module Itamae
           temppath = ::File.join(runner.tmpdir, Time.now.to_f.to_s)
           backend.send_file(f.path, temppath)
           run_specinfra(:move_file, temppath, cron_file)
+          run_specinfra(:change_file_owner, cron_file, attributes.owner, attributes.group)
         ensure
           f.unlink if f
         end
